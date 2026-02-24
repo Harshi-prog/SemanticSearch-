@@ -1,11 +1,31 @@
-<div align="center">
+# Semantic Search Engine with Vector Databases 🎀
 
-<img width="1200" height="475" alt="GHBanner" src="https://github.com/user-attachments/assets/0aa67016-6eaf-458a-adb2-6e31a0763ed6" />
+A production-quality BCA Final Year Project implementing a Retrieval-Augmented Generation (RAG) pipeline.
 
-  <h1>Built with AI Studio</h2>
+## 🌟 Features
+- **Semantic Search**: Uses Google Gemini embeddings for deep contextual understanding.
+- **Vector Database**: Local SQLite-based vector storage with cosine similarity search.
+- **RAG Pipeline**: Answers are strictly grounded in uploaded documents to prevent hallucinations.
+- **Document Support**: PDF, DOCX, and TXT files.
+- **Aesthetic UI**: Modern, responsive design with a soft baby pink theme and elegant animations.
+- **Citations**: Clear source attribution with similarity scores.
 
-  <p>The fastest path from prompt to production with Gemini.</p>
+## 🛠️ Tech Stack
+- **Frontend**: React, Vite, Tailwind CSS, Framer Motion, Lucide Icons.
+- **Backend**: Node.js, Express, Better-SQLite3.
+- **AI**: Google Gemini API (Embeddings & LLM).
+- **Processing**: pdf-parse, mammoth.
 
-  <a href="https://aistudio.google.com/apps">Start building</a>
+## 🚀 Setup Instructions
+1. **API Key**: Ensure your Gemini API key is configured in the environment.
+2. **Install Dependencies**: `npm install`
+3. **Run Development**: `npm run dev`
 
-</div>
+## 📁 Project Structure
+- `/src/components`: UI components.
+- `/src/services`: Gemini API and search logic.
+- `/server.ts`: Express backend for file processing and vector storage.
+- `/src/pages`: Home, Upload, and About pages.
+
+## 🎀 Design Philosophy
+The application follows a "Soft Professional" aesthetic, combining academic rigor with a pleasant, modern visual style. Subtle pink bows are integrated as decorative elements to meet project requirements while maintaining professionalism.
