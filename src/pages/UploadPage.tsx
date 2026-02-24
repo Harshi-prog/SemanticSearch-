@@ -4,22 +4,52 @@ import { Upload as UploadIcon, File, X, CheckCircle, Loader2, Trash2 } from 'luc
 import { motion, AnimatePresence } from 'motion/react';
 import { Card, SectionTitle, BowIcon } from '../components/UI';
 import { generateEmbedding } from '../services/gemini';
+import { vectorStore } from '../services/vectorStore';
+import * as mammoth from 'mammoth';
+import * as pdfjsLib from 'pdfjs-dist';
+
+// Set up PDF.js worker
+pdfjsLib.GlobalWorkerOptions.workerSrc = `https://cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjsLib.version}/pdf.worker.min.mjs`;
 
 export const UploadPage = () => {
   const [files, setFiles] = useState<File[]>([]);
   const [uploading, setUploading] = useState(false);
   const [progress, setProgress] = useState(0);
-  const [documents, setDocuments] = useState<any[]>([]);
+  const [documents, setDocuments] = useState(vectorStore.getDocuments());
 
-  const fetchDocuments = async () => {
-    const res = await fetch('/api/documents');
-    const data = await res.json();
-    setDocuments(data);
+  const chunkText = (text: string, size: number = 1000, overlap: number = 200) => {
+    const chunks = [];
+    let start = 0;
+    while (start < text.length) {
+      const end = Math.min(start + size, text.length);
+      chunks.push(text.slice(start, end));
+      start += size - overlap;
+    }
+    return chunks;
   };
 
-  useEffect(() => {
-    fetchDocuments();
-  }, []);
+  const extractText = async (file: File): Promise<string> => {
+    const ext = file.name.split('.').pop()?.toLowerCase();
+    
+    if (ext === 'pdf') {
+      const arrayBuffer = await file.arrayBuffer();
+      const pdf = await pdfjsLib.getDocument({ data: arrayBuffer }).promise;
+      let fullText = '';
+      for (let i = 1; i <= pdf.numPages; i++) {
+        const page = await pdf.getPage(i);
+        const textContent = await page.getTextContent();
+        const pageText = textContent.items.map((item: any) => item.str).join(' ');
+        fullText += pageText + '\n';
+      }
+      return fullText;
+    } else if (ext === 'docx') {
+      const arrayBuffer = await file.arrayBuffer();
+      const result = await mammoth.extractRawText({ arrayBuffer });
+      return result.value;
+    } else {
+      return await file.text();
+    }
+  };
 
   const onDrop = useCallback((acceptedFiles: File[]) => {
     setFiles(prev => [...prev, ...acceptedFiles]);
@@ -46,34 +76,21 @@ export const UploadPage = () => {
     try {
       for (let i = 0; i < files.length; i++) {
         const file = files[i];
-        const formData = new FormData();
-        formData.append('file', file);
-
-        // 1. Extract text and chunk
-        const extractRes = await fetch('/api/extract', {
-          method: 'POST',
-          body: formData
-        });
-        const { filename, chunks } = await extractRes.json();
-
-        // 2. Generate embeddings for chunks
-        const embeddings = [];
+        const text = await extractText(file);
+        const chunks = chunkText(text);
+        
+        const chunkEmbeddings = [];
         for (let j = 0; j < chunks.length; j++) {
-          const emb = await generateEmbedding(chunks[j]);
-          embeddings.push(emb);
+          const embedding = await generateEmbedding(chunks[j]);
+          chunkEmbeddings.push({ content: chunks[j], embedding });
           setProgress(Math.round(((i * chunks.length + j + 1) / (files.length * chunks.length)) * 100));
         }
-
-        // 3. Index in vector DB
-        await fetch('/api/index', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ filename, chunks, embeddings })
-        });
+        
+        vectorStore.addDocument(file.name, chunkEmbeddings);
       }
 
       setFiles([]);
-      fetchDocuments();
+      setDocuments(vectorStore.getDocuments());
     } catch (error) {
       console.error('Upload error:', error);
       alert('Failed to upload some documents.');
@@ -83,10 +100,10 @@ export const UploadPage = () => {
     }
   };
 
-  const deleteDoc = async (id: number) => {
+  const deleteDoc = (id: string) => {
     if (!confirm('Are you sure you want to delete this document?')) return;
-    await fetch(`/api/documents/${id}`, { method: 'DELETE' });
-    fetchDocuments();
+    vectorStore.deleteDocument(id);
+    setDocuments(vectorStore.getDocuments());
   };
 
   return (
@@ -172,7 +189,7 @@ export const UploadPage = () => {
                 </div>
                 <div>
                   <h4 className="font-bold text-slate-800">{doc.filename}</h4>
-                  <p className="text-xs text-slate-400">Indexed on {new Date(doc.upload_date).toLocaleDateString()}</p>
+                  <p className="text-xs text-slate-400">Indexed locally</p>
                 </div>
               </div>
               <button 

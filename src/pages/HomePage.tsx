@@ -1,8 +1,9 @@
 import React, { useState } from 'react';
-import { Search as SearchIcon, Sparkles, FileText, Quote, ChevronRight } from 'lucide-react';
+import { Search as SearchIcon, Sparkles, ChevronRight } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { Card, SectionTitle, BowIcon } from '../components/UI';
 import { generateEmbedding, getAnswerFromContext } from '../services/gemini';
+import { vectorStore } from '../services/vectorStore';
 import Markdown from 'react-markdown';
 
 export const HomePage = () => {
@@ -24,36 +25,23 @@ export const HomePage = () => {
       // 1. Generate query embedding
       const queryEmbedding = await generateEmbedding(query);
 
-      // 2. Search vector DB
-      const searchRes = await fetch('/api/search', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ 
-          queryEmbedding, 
-          topK: 10,
-          queryText: query // Pass raw text for keyword fallback
-        }) 
-      });
-      let sources = await searchRes.json();
+      // 2. Search local vector store
+      const sources = vectorStore.search(queryEmbedding, 10);
 
       if (sources.length === 0) {
         setResult({
-          answer: "No documents have been uploaded yet. Please go to the Upload page.",
+          answer: "No documents have been indexed yet. Please go to the Upload page and add some documents.",
           sources: []
         });
         return;
       }
 
-      // 3. Optional: Semantic Reranking (if we have many sources)
-      // For this project, we'll use the top retrieved chunks directly 
-      // but ensure they are relevant in the prompt.
-
-      // 4. Construct context
+      // 3. Construct context
       const context = sources
         .map((s: any) => `[Source: ${s.filename}] ${s.content}`)
         .join('\n\n');
 
-      // 5. Get answer from Gemini
+      // 4. Get answer from Gemini
       const answer = await getAnswerFromContext(query, context);
 
       // Filter sources to only show those with a reasonable score
@@ -63,7 +51,7 @@ export const HomePage = () => {
     } catch (error) {
       console.error('Search error:', error);
       setResult({
-        answer: "An error occurred during search. Please try again.",
+        answer: "An error occurred during search. Please ensure you have indexed documents and your API key is valid.",
         sources: []
       });
     } finally {
@@ -143,37 +131,6 @@ export const HomePage = () => {
                 <Markdown>{result.answer}</Markdown>
               </div>
             </Card>
-
-            {result.sources.length > 0 && (
-              <div>
-                <SectionTitle icon={Quote}>Sources & Citations</SectionTitle>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  {result.sources.map((source, idx) => (
-                    <motion.div
-                      key={idx}
-                      initial={{ opacity: 0, scale: 0.95 }}
-                      animate={{ opacity: 1, scale: 1 }}
-                      transition={{ delay: idx * 0.1 }}
-                    >
-                      <Card className="h-full bg-white/50 hover:bg-white/80 transition-colors border-pink-100">
-                        <div className="flex items-start justify-between mb-3">
-                          <div className="flex items-center gap-2 text-pink-600 font-semibold">
-                            <FileText className="w-4 h-4" />
-                            <span className="text-sm truncate max-w-[150px]">{source.filename}</span>
-                          </div>
-                          <span className="text-xs bg-pink-100 text-pink-700 px-2 py-1 rounded-full font-bold">
-                            {Math.round(source.score * 100)}% Match
-                          </span>
-                        </div>
-                        <p className="text-sm text-slate-600 line-clamp-4 italic">
-                          "{source.content}"
-                        </p>
-                      </Card>
-                    </motion.div>
-                  ))}
-                </div>
-              </div>
-            )}
           </motion.div>
         )}
       </AnimatePresence>

@@ -18,7 +18,7 @@ export const AboutPage = () => {
     {
       title: "Core Technologies",
       icon: Cpu,
-      content: "Built with React, Node.js, and SQLite. It leverages Google Gemini's state-of-the-art embedding models for vector representation and LLMs for grounded natural language generation."
+      content: "Built with React and Vite. It leverages browser-based storage (LocalStorage) for the vector store and Google Gemini's state-of-the-art models for embeddings and grounded natural language generation."
     },
     {
       title: "RAG Pipeline",
