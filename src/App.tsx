@@ -4,8 +4,17 @@ import { Navbar } from './components/Navbar';
 import { HomePage } from './pages/HomePage';
 import { UploadPage } from './pages/UploadPage';
 import { AboutPage } from './pages/AboutPage';
+import { LoginPage } from './pages/LoginPage';
 import { BowIcon } from './components/UI';
 import { Moon, Sun } from 'lucide-react';
+
+const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
+  const user = localStorage.getItem('current_user');
+  if (!user) {
+    return <LoginPage />;
+  }
+  return <>{children}</>;
+};
 
 export default function App() {
   const [isDark, setIsDark] = useState(() => {
@@ -29,6 +38,20 @@ export default function App() {
       localStorage.setItem('theme', 'light');
     }
   }, [isDark]);
+
+  const [user, setUser] = useState(() => {
+    const saved = localStorage.getItem('current_user');
+    return saved ? JSON.parse(saved) : null;
+  });
+
+  useEffect(() => {
+    const handleAuthChange = () => {
+      const saved = localStorage.getItem('current_user');
+      setUser(saved ? JSON.parse(saved) : null);
+    };
+    window.addEventListener('auth-change', handleAuthChange);
+    return () => window.removeEventListener('auth-change', handleAuthChange);
+  }, []);
 
   return (
     <Router>
@@ -55,8 +78,9 @@ export default function App() {
 
         <main className="container mx-auto px-4 pb-20">
           <Routes>
-            <Route path="/" element={<HomePage />} />
-            <Route path="/upload" element={<UploadPage />} />
+            <Route path="/login" element={<LoginPage />} />
+            <Route path="/" element={<ProtectedRoute><HomePage /></ProtectedRoute>} />
+            <Route path="/upload" element={<ProtectedRoute><UploadPage /></ProtectedRoute>} />
             <Route path="/about" element={<AboutPage />} />
           </Routes>
         </main>
