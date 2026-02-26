@@ -30,13 +30,13 @@ export const BowIcon = ({ className = "w-6 h-6" }: { className?: string }) => (
 export const SectionTitle = ({ children, icon: Icon }: { children: React.ReactNode, icon?: any }) => (
   <div className="flex items-center gap-2 mb-6">
     {Icon && <Icon className="w-6 h-6 text-pink-500" />}
-    <h2 className="text-2xl font-display font-semibold text-slate-800">{children}</h2>
+    <h2 className="text-2xl font-display font-semibold text-pink-800 dark:text-pink-200">{children}</h2>
     <BowIcon className="w-5 h-5 ml-1 opacity-60" />
   </div>
 );
 
 export const Card = ({ children, className = "", withBow = false }: { children: React.ReactNode, className?: string, withBow?: boolean }) => (
-  <div className={`glass rounded-3xl p-6 relative overflow-hidden ${className}`}>
+  <div className={`glass rounded-3xl p-6 relative overflow-hidden hover:scale-[1.01] hover:shadow-2xl transition-all duration-300 ${className}`}>
     {withBow && <BowIcon className="absolute -top-2 -right-2 w-12 h-12 opacity-10 rotate-12 pointer-events-none" />}
     {children}
   </div>

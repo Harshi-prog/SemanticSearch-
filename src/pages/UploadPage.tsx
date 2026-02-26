@@ -114,17 +114,19 @@ export const UploadPage = () => {
         <div 
           {...getRootProps()} 
           className={`border-4 border-dashed rounded-3xl p-12 text-center transition-all cursor-pointer ${
-            isDragActive ? 'border-pink-400 bg-pink-50' : 'border-pink-100 hover:border-pink-200'
+            isDragActive 
+              ? 'border-pink-400 bg-pink-50 dark:bg-pink-900/10' 
+              : 'border-pink-100 dark:border-slate-800 hover:border-pink-200 dark:hover:border-slate-700'
           }`}
         >
           <input {...getInputProps()} />
-          <div className="bg-pink-100 w-20 h-20 rounded-full flex items-center justify-center mx-auto mb-6">
+          <div className="bg-pink-100 dark:bg-pink-900/30 w-20 h-20 rounded-full flex items-center justify-center mx-auto mb-6">
             <UploadIcon className="w-10 h-10 text-pink-500" />
           </div>
-          <h3 className="text-2xl font-display font-semibold text-slate-800 mb-2">
+          <h3 className="text-2xl font-display font-semibold text-slate-800 dark:text-white mb-2">
             Drag & Drop Files
           </h3>
-          <p className="text-slate-500">
+          <p className="text-slate-500 dark:text-slate-400">
             Support for PDF, DOCX, and TXT files.
           </p>
         </div>
@@ -138,11 +140,11 @@ export const UploadPage = () => {
               className="mt-8 space-y-3"
             >
               {files.map((file, idx) => (
-                <div key={idx} className="flex items-center justify-between bg-pink-50/50 p-4 rounded-2xl border border-pink-100">
+                <div key={idx} className="flex items-center justify-between bg-pink-50/50 dark:bg-slate-800/50 p-4 rounded-2xl border border-pink-100 dark:border-slate-700">
                   <div className="flex items-center gap-3">
                     <File className="w-5 h-5 text-pink-500" />
-                    <span className="font-medium text-slate-700">{file.name}</span>
-                    <span className="text-xs text-slate-400">({(file.size / 1024).toFixed(1)} KB)</span>
+                    <span className="font-medium text-slate-700 dark:text-slate-200">{file.name}</span>
+                    <span className="text-xs text-slate-400 dark:text-slate-500">({(file.size / 1024).toFixed(1)} KB)</span>
                   </div>
                   <button onClick={() => removeFile(idx)} className="text-slate-400 hover:text-pink-600 transition-colors">
                     <X className="w-5 h-5" />
@@ -154,7 +156,7 @@ export const UploadPage = () => {
                 <button
                   onClick={handleUpload}
                   disabled={uploading}
-                  className="w-full bg-pink-500 hover:bg-pink-600 text-white py-4 rounded-2xl font-bold text-lg shadow-lg shadow-pink-200 transition-all flex items-center justify-center gap-3 disabled:opacity-50"
+                  className="w-full bg-pink-500 hover:bg-pink-600 text-white py-4 rounded-2xl font-bold text-lg shadow-lg shadow-pink-200 dark:shadow-none transition-all flex items-center justify-center gap-3 disabled:opacity-50"
                 >
                   {uploading ? (
                     <>
@@ -177,24 +179,24 @@ export const UploadPage = () => {
       <SectionTitle icon={File}>Indexed Documents ({documents.length})</SectionTitle>
       <div className="grid grid-cols-1 gap-4">
         {documents.length === 0 ? (
-          <div className="text-center py-12 text-slate-400 border-2 border-dashed border-pink-100 rounded-3xl">
+          <div className="text-center py-12 text-slate-400 dark:text-slate-500 border-2 border-dashed border-pink-100 dark:border-slate-800 rounded-3xl">
             No documents indexed yet.
           </div>
         ) : (
           documents.map((doc) => (
             <Card key={doc.id} className="flex items-center justify-between py-4">
               <div className="flex items-center gap-4">
-                <div className="bg-pink-100 p-3 rounded-2xl">
+                <div className="bg-pink-100 dark:bg-pink-900/30 p-3 rounded-2xl">
                   <File className="w-6 h-6 text-pink-500" />
                 </div>
                 <div>
-                  <h4 className="font-bold text-slate-800">{doc.filename}</h4>
-                  <p className="text-xs text-slate-400">Indexed locally</p>
+                  <h4 className="font-bold text-slate-800 dark:text-white">{doc.filename}</h4>
+                  <p className="text-xs text-slate-400 dark:text-slate-500">Indexed locally</p>
                 </div>
               </div>
               <button 
                 onClick={() => deleteDoc(doc.id)}
-                className="p-2 text-slate-300 hover:text-pink-600 transition-colors"
+                className="p-2 text-slate-300 dark:text-slate-500 hover:text-pink-600 transition-colors"
               >
                 <Trash2 className="w-5 h-5" />
               </button>

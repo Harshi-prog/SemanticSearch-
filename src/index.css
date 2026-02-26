@@ -14,12 +14,43 @@
 
 @layer base {
   body {
-    @apply bg-pink-50 text-slate-900 font-sans;
+    @apply bg-pink-50 text-slate-900 font-sans transition-colors duration-300;
   }
 }
 
+/* Global Dark Mode Overrides */
+.dark body {
+  background-color: #020617 !important; /* slate-950 */
+  color: #f1f5f9 !important; /* slate-100 */
+}
+
+.dark .pink-gradient {
+  background: linear-gradient(135deg, #020617 0%, #0f172a 100%) !important;
+}
+
+.dark h1, 
+.dark h2, 
+.dark h3, 
+.dark h4, 
+.dark .text-slate-900, 
+.dark .text-slate-800 {
+  color: #ffffff !important;
+}
+
+.dark p, 
+.dark .text-slate-600, 
+.dark .text-slate-700 {
+  color: #cbd5e1 !important; /* slate-300 */
+}
+
+.dark .glass {
+  background-color: rgba(15, 23, 42, 0.8) !important; /* slate-900 */
+  border-color: rgba(30, 41, 59, 0.5) !important; /* slate-800 */
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5) !important;
+}
+
 .glass {
-  @apply bg-white/70 backdrop-blur-md border border-white/20 shadow-xl;
+  @apply bg-white/70 backdrop-blur-md border border-white/20 shadow-xl transition-all duration-300;
 }
 
 .pink-gradient {

@@ -1,5 +1,5 @@
 import React from 'react';
-import { Info, BookOpen, Cpu, Target, Rocket, Sparkles } from 'lucide-react';
+import { Info, BookOpen, Cpu, Target, Sparkles } from 'lucide-react';
 import { motion } from 'motion/react';
 import { Card, SectionTitle, BowIcon } from '../components/UI';
 
@@ -21,7 +21,7 @@ export const AboutPage = () => {
       content: "Built with React and Vite. It leverages browser-based storage (LocalStorage) for the vector store and Google Gemini's state-of-the-art models for embeddings and grounded natural language generation."
     },
     {
-      title: "RAG Pipeline",
+      title: "Workflow",
       icon: Sparkles,
       content: "1. Document Chunking -> 2. Vector Embedding -> 3. Semantic Similarity Search -> 4. Contextual Prompting -> 5. Grounded Answer Generation."
     }
@@ -34,13 +34,13 @@ export const AboutPage = () => {
         animate={{ opacity: 1, y: 0 }}
         className="text-center mb-16"
       >
-        <div className="inline-block bg-pink-100 p-4 rounded-3xl mb-6">
+        <div className="inline-block bg-pink-100 dark:bg-pink-900/30 p-4 rounded-3xl mb-6">
           <Info className="w-12 h-12 text-pink-500" />
         </div>
-        <h1 className="text-4xl font-display font-bold text-slate-900 mb-4">
-          About the Project 🎀
+        <h1 className="text-4xl font-display font-bold text-slate-900 dark:text-white mb-4">
+          About the Project
         </h1>
-        <p className="text-slate-600 text-lg">
+        <p className="text-slate-600 dark:text-slate-400 text-lg">
           BCA Final Year Project: Semantic Search Engine with Vector Databases
         </p>
       </motion.div>
@@ -53,14 +53,14 @@ export const AboutPage = () => {
             animate={{ opacity: 1, x: 0 }}
             transition={{ delay: idx * 0.1 }}
           >
-            <Card className="h-full">
+            <Card className="h-full" withBow>
               <div className="flex items-center gap-3 mb-4">
-                <div className="p-2 bg-pink-50 rounded-xl">
+                <div className="p-2 bg-pink-50 dark:bg-pink-900/20 rounded-xl">
                   <section.icon className="w-6 h-6 text-pink-500" />
                 </div>
-                <h3 className="text-xl font-display font-bold text-slate-800">{section.title}</h3>
+                <h3 className="text-xl font-display font-bold text-pink-800 dark:text-pink-200">{section.title}</h3>
               </div>
-              <p className="text-slate-600 leading-relaxed">
+              <p className="text-slate-600 dark:text-slate-400 leading-relaxed">
                 {section.content}
               </p>
             </Card>
@@ -68,35 +68,6 @@ export const AboutPage = () => {
         ))}
       </div>
 
-      <Card className="bg-pink-600 text-white overflow-hidden relative">
-        <div className="relative z-10">
-          <SectionTitle icon={Rocket}><span className="text-white">Future Scope</span></SectionTitle>
-          <ul className="space-y-4 text-pink-50">
-            <li className="flex items-start gap-3">
-              <div className="mt-1 bg-white/20 p-1 rounded-full"><Sparkles className="w-3 h-3" /></div>
-              <span>Integration with cloud vector databases like Pinecone for massive scalability.</span>
-            </li>
-            <li className="flex items-start gap-3">
-              <div className="mt-1 bg-white/20 p-1 rounded-full"><Sparkles className="w-3 h-3" /></div>
-              <span>Support for multi-modal search including images and audio transcripts.</span>
-            </li>
-            <li className="flex items-start gap-3">
-              <div className="mt-1 bg-white/20 p-1 rounded-full"><Sparkles className="w-3 h-3" /></div>
-              <span>Real-time collaborative document indexing and shared search workspaces.</span>
-            </li>
-          </ul>
-        </div>
-        <BowIcon className="absolute -bottom-4 -right-4 w-32 h-32 opacity-10 rotate-12" />
-      </Card>
-
-      <div className="mt-16 text-center text-slate-400 text-sm">
-        <p>© 2026 SemanticSearch Project • Developed for BCA Academic Evaluation</p>
-        <div className="flex justify-center gap-2 mt-2">
-          <BowIcon className="w-4 h-4" />
-          <BowIcon className="w-4 h-4" />
-          <BowIcon className="w-4 h-4" />
-        </div>
-      </div>
     </div>
   );
 };
