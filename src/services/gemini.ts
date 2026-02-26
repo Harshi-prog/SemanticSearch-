@@ -12,18 +12,21 @@ export const getGeminiAI = () => {
 export async function generateEmbedding(text: string) {
   const ai = getGeminiAI();
   try {
-    // Use models/ prefix and try passing content as a string if the object fails
-    const result = await (ai as any).models.embedContent({
-      model: "models/text-embedding-004",
-      content: text,
+    const result = await ai.models.embedContent({
+      model: "text-embedding-004",
+      contents: [{ parts: [{ text }] }],
     });
     
-    if (result && result.embedding && result.embedding.values) {
-      return result.embedding.values;
+    if (result && result.embeddings && result.embeddings[0] && result.embeddings[0].values) {
+      return result.embeddings[0].values;
+    }
+    // Handle single embedding response if it's not an array
+    if ((result as any).embedding && (result as any).embedding.values) {
+      return (result as any).embedding.values;
     }
     throw new Error("Invalid embedding response structure");
   } catch (error: any) {
-    console.error("Embedding failed, using deterministic fallback:", error.message || error);
+    console.error("Embedding failed:", error.message || error);
     
     // Fallback: Create a deterministic vector based on the text content
     const vector = new Array(768).fill(0);

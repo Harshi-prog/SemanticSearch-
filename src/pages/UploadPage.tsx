@@ -1,6 +1,6 @@
 import React, { useState, useCallback, useEffect } from 'react';
 import { useDropzone } from 'react-dropzone';
-import { Upload as UploadIcon, File, X, CheckCircle, Loader2, Trash2 } from 'lucide-react';
+import { Upload as UploadIcon, File, X, CheckCircle, Loader2, Trash2, Sparkles } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { Card, SectionTitle, BowIcon } from '../components/UI';
 import { generateEmbedding } from '../services/gemini';
@@ -8,14 +8,22 @@ import { vectorStore } from '../services/vectorStore';
 import * as mammoth from 'mammoth';
 import * as pdfjsLib from 'pdfjs-dist';
 
-// Set up PDF.js worker
-pdfjsLib.GlobalWorkerOptions.workerSrc = `https://cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjsLib.version}/pdf.worker.min.mjs`;
+// Set up PDF.js worker using a more reliable CDN link or local path
+// For version 5.x, we ensure the worker matches the library version
+pdfjsLib.GlobalWorkerOptions.workerSrc = `https://unpkg.com/pdfjs-dist@${pdfjsLib.version}/build/pdf.worker.min.mjs`;
 
 export const UploadPage = () => {
   const [files, setFiles] = useState<File[]>([]);
   const [uploading, setUploading] = useState(false);
   const [progress, setProgress] = useState(0);
   const [documents, setDocuments] = useState(vectorStore.getDocuments());
+  const [apiKeyMissing, setApiKeyMissing] = useState(false);
+
+  useEffect(() => {
+    if (!process.env.GEMINI_API_KEY) {
+      setApiKeyMissing(true);
+    }
+  }, []);
 
   const chunkText = (text: string, size: number = 1000, overlap: number = 200) => {
     const chunks = [];
@@ -76,17 +84,26 @@ export const UploadPage = () => {
     try {
       for (let i = 0; i < files.length; i++) {
         const file = files[i];
-        const text = await extractText(file);
-        const chunks = chunkText(text);
-        
-        const chunkEmbeddings = [];
-        for (let j = 0; j < chunks.length; j++) {
-          const embedding = await generateEmbedding(chunks[j]);
-          chunkEmbeddings.push({ content: chunks[j], embedding });
-          setProgress(Math.round(((i * chunks.length + j + 1) / (files.length * chunks.length)) * 100));
+        try {
+          const text = await extractText(file);
+          if (!text || text.trim().length === 0) {
+            throw new Error(`No text could be extracted from ${file.name}`);
+          }
+          
+          const chunks = chunkText(text);
+          const chunkEmbeddings = [];
+          
+          for (let j = 0; j < chunks.length; j++) {
+            const embedding = await generateEmbedding(chunks[j]);
+            chunkEmbeddings.push({ content: chunks[j], embedding });
+            setProgress(Math.round(((i * chunks.length + j + 1) / (files.length * chunks.length)) * 100));
+          }
+          
+          vectorStore.addDocument(file.name, chunkEmbeddings);
+        } catch (fileError: any) {
+          console.error(`Error processing ${file.name}:`, fileError);
+          alert(`Error processing ${file.name}: ${fileError.message || 'Unknown error'}`);
         }
-        
-        vectorStore.addDocument(file.name, chunkEmbeddings);
       }
 
       setFiles([]);
@@ -109,6 +126,15 @@ export const UploadPage = () => {
   return (
     <div className="max-w-4xl mx-auto py-12 px-4">
       <SectionTitle icon={UploadIcon}>Upload Documents</SectionTitle>
+      
+      {apiKeyMissing && (
+        <div className="mb-8 p-4 bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 rounded-2xl text-amber-800 dark:text-amber-200 text-sm flex items-center gap-3">
+          <Sparkles className="w-5 h-5 flex-shrink-0" />
+          <p>
+            <strong>Note:</strong> GEMINI_API_KEY is not configured. The app will use a local deterministic fallback for embeddings. Search results may be less accurate.
+          </p>
+        </div>
+      )}
       
       <Card className="mb-12" withBow>
         <div 
