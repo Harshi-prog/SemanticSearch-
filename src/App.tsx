@@ -5,14 +5,23 @@ import { HomePage } from './pages/HomePage';
 import { UploadPage } from './pages/UploadPage';
 import { AboutPage } from './pages/AboutPage';
 import { LoginPage } from './pages/LoginPage';
+import { AdminPage } from './pages/AdminPage';
 import { BowIcon } from './components/UI';
 import { Moon, Sun } from 'lucide-react';
 
-const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
-  const user = localStorage.getItem('current_user');
-  if (!user) {
-    return <LoginPage />;
-  }
+const UserRoute = ({ children }: { children: React.ReactNode }) => {
+  const userStr = localStorage.getItem('current_user');
+  if (!userStr) return <LoginPage />;
+  const user = JSON.parse(userStr);
+  if (user.role === 'admin') return <AdminPage />;
+  return <>{children}</>;
+};
+
+const AdminRoute = ({ children }: { children: React.ReactNode }) => {
+  const userStr = localStorage.getItem('current_user');
+  if (!userStr) return <LoginPage />;
+  const user = JSON.parse(userStr);
+  if (user.role !== 'admin') return <HomePage />;
   return <>{children}</>;
 };
 
@@ -79,8 +88,9 @@ export default function App() {
         <main className="container mx-auto px-4 pb-20">
           <Routes>
             <Route path="/login" element={<LoginPage />} />
-            <Route path="/" element={<ProtectedRoute><HomePage /></ProtectedRoute>} />
-            <Route path="/upload" element={<ProtectedRoute><UploadPage /></ProtectedRoute>} />
+            <Route path="/" element={<UserRoute><HomePage /></UserRoute>} />
+            <Route path="/upload" element={<UserRoute><UploadPage /></UserRoute>} />
+            <Route path="/admin" element={<AdminRoute><AdminPage /></AdminRoute>} />
             <Route path="/about" element={<AboutPage />} />
           </Routes>
         </main>

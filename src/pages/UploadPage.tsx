@@ -18,6 +18,7 @@ export const UploadPage = () => {
   const [progress, setProgress] = useState(0);
   const [documents, setDocuments] = useState(vectorStore.getDocuments());
   const [apiKeyMissing, setApiKeyMissing] = useState(false);
+  const [docToDelete, setDocToDelete] = useState<{ id: string, name: string } | null>(null);
 
   useEffect(() => {
     if (!process.env.GEMINI_API_KEY) {
@@ -117,14 +118,52 @@ export const UploadPage = () => {
     }
   };
 
-  const deleteDoc = (id: string) => {
-    if (!confirm('Are you sure you want to delete this document?')) return;
-    vectorStore.deleteDocument(id);
-    setDocuments(vectorStore.getDocuments());
+  const deleteDoc = () => {
+    if (docToDelete) {
+      vectorStore.deleteDocument(docToDelete.id);
+      setDocuments(vectorStore.getDocuments());
+      setDocToDelete(null);
+    }
   };
 
   return (
     <div className="max-w-4xl mx-auto py-12 px-4">
+      {/* Delete Confirmation Modal */}
+      <AnimatePresence>
+        {docToDelete && (
+          <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm">
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.95 }}
+              className="bg-white dark:bg-slate-800 rounded-3xl p-8 max-w-sm w-full shadow-2xl border border-pink-100 dark:border-slate-700"
+            >
+              <div className="bg-red-100 dark:bg-red-900/30 w-16 h-16 rounded-2xl flex items-center justify-center mb-6 mx-auto">
+                <Trash2 className="w-8 h-8 text-red-500" />
+              </div>
+              <h3 className="text-xl font-bold text-slate-900 dark:text-white text-center mb-2">Delete Document?</h3>
+              <p className="text-slate-600 dark:text-slate-400 text-center mb-8">
+                Are you sure you want to delete <span className="font-bold text-pink-500">{docToDelete.name}</span>? This will remove it from the search index.
+              </p>
+              <div className="flex gap-3">
+                <button
+                  onClick={() => setDocToDelete(null)}
+                  className="flex-1 px-4 py-3 rounded-xl font-bold text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={deleteDoc}
+                  className="flex-1 px-4 py-3 rounded-xl font-bold bg-red-500 hover:bg-red-600 text-white shadow-lg shadow-red-500/20 transition-all"
+                >
+                  Delete
+                </button>
+              </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
+
       <SectionTitle icon={UploadIcon}>Upload Documents</SectionTitle>
       
       {apiKeyMissing && (
@@ -221,7 +260,7 @@ export const UploadPage = () => {
                 </div>
               </div>
               <button 
-                onClick={() => deleteDoc(doc.id)}
+                onClick={() => setDocToDelete({ id: doc.id, name: doc.filename })}
                 className="p-2 text-slate-300 dark:text-slate-500 hover:text-pink-600 transition-colors"
               >
                 <Trash2 className="w-5 h-5" />

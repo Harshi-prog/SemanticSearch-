@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { NavLink, useNavigate } from 'react-router-dom';
-import { Search, Upload, Info, Sparkles, LogOut, User } from 'lucide-react';
+import { Search, Upload, Info, Sparkles, LogOut, User, Shield } from 'lucide-react';
 import { BowIcon } from './UI';
 
 export const Navbar = () => {
@@ -39,7 +39,7 @@ export const Navbar = () => {
           </div>
           
           <div className="hidden md:flex items-center space-x-8">
-            {user && (
+            {user && user.role !== 'admin' && (
               <>
                 <NavLink 
                   to="/" 
@@ -60,6 +60,17 @@ export const Navbar = () => {
                   Upload
                 </NavLink>
               </>
+            )}
+            {user && user.role === 'admin' && (
+              <NavLink 
+                to="/admin" 
+                className={({ isActive }) => 
+                  `flex items-center gap-2 text-sm font-medium transition-colors ${isActive ? 'text-pink-600 dark:text-pink-400' : 'text-slate-600 dark:text-slate-400 hover:text-pink-500'}`
+                }
+              >
+                <Shield className="w-4 h-4" />
+                Admin
+              </NavLink>
             )}
             <NavLink 
               to="/about" 

@@ -9,6 +9,7 @@ export const LoginPage = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [name, setName] = useState('');
+  const [role, setRole] = useState<'user' | 'admin'>('user');
   const [error, setError] = useState('');
   const navigate = useNavigate();
 
@@ -24,7 +25,7 @@ export const LoginPage = () => {
       if (user) {
         localStorage.setItem('current_user', JSON.stringify(user));
         window.dispatchEvent(new Event('auth-change'));
-        navigate('/');
+        navigate(user.role === 'admin' ? '/admin' : '/');
       } else {
         setError('Invalid email or password');
       }
@@ -41,12 +42,12 @@ export const LoginPage = () => {
         return;
       }
 
-      const newUser = { name, email, password };
+      const newUser = { name, email, password, role };
       users.push(newUser);
       localStorage.setItem('mock_users', JSON.stringify(users));
       localStorage.setItem('current_user', JSON.stringify(newUser));
       window.dispatchEvent(new Event('auth-change'));
-      navigate('/');
+      navigate(newUser.role === 'admin' ? '/admin' : '/');
     }
   };
 
@@ -72,22 +73,55 @@ export const LoginPage = () => {
         <form onSubmit={handleSubmit} className="space-y-4">
           <AnimatePresence mode="wait">
             {!isLogin && (
-              <motion.div
-                key="name"
-                initial={{ opacity: 0, height: 0 }}
-                animate={{ opacity: 1, height: 'auto' }}
-                exit={{ opacity: 0, height: 0 }}
-                className="relative"
-              >
-                <input
-                  type="text"
-                  placeholder="Full Name"
-                  value={name}
-                  onChange={(e) => setName(e.target.value)}
-                  className="w-full bg-pink-50/50 dark:bg-slate-800/50 border-2 border-pink-100 dark:border-slate-700 rounded-2xl py-3 pl-12 pr-4 focus:outline-none focus:border-pink-300 transition-all dark:text-slate-100"
-                />
-                <User className="absolute left-4 top-1/2 -translate-y-1/2 text-pink-400 w-5 h-5" />
-              </motion.div>
+              <>
+                <motion.div
+                  key="role"
+                  initial={{ opacity: 0, height: 0 }}
+                  animate={{ opacity: 1, height: 'auto' }}
+                  exit={{ opacity: 0, height: 0 }}
+                  className="flex p-1 bg-pink-50/50 dark:bg-slate-800/50 rounded-2xl border-2 border-pink-100 dark:border-slate-700"
+                >
+                  <button
+                    type="button"
+                    onClick={() => setRole('user')}
+                    className={`flex-1 py-2 rounded-xl text-sm font-bold transition-all ${
+                      role === 'user' 
+                        ? 'bg-pink-500 text-white shadow-md' 
+                        : 'text-slate-500 dark:text-slate-400 hover:text-pink-500'
+                    }`}
+                  >
+                    User
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setRole('admin')}
+                    className={`flex-1 py-2 rounded-xl text-sm font-bold transition-all ${
+                      role === 'admin' 
+                        ? 'bg-pink-500 text-white shadow-md' 
+                        : 'text-slate-500 dark:text-slate-400 hover:text-pink-500'
+                    }`}
+                  >
+                    Admin
+                  </button>
+                </motion.div>
+
+                <motion.div
+                  key="name"
+                  initial={{ opacity: 0, height: 0 }}
+                  animate={{ opacity: 1, height: 'auto' }}
+                  exit={{ opacity: 0, height: 0 }}
+                  className="relative"
+                >
+                  <input
+                    type="text"
+                    placeholder="Full Name"
+                    value={name}
+                    onChange={(e) => setName(e.target.value)}
+                    className="w-full bg-pink-50/50 dark:bg-slate-800/50 border-2 border-pink-100 dark:border-slate-700 rounded-2xl py-3 pl-12 pr-4 focus:outline-none focus:border-pink-300 transition-all dark:text-slate-100"
+                  />
+                  <User className="absolute left-4 top-1/2 -translate-y-1/2 text-pink-400 w-5 h-5" />
+                </motion.div>
+              </>
             )}
           </AnimatePresence>
 

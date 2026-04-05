@@ -9,24 +9,23 @@ export const getGeminiAI = () => {
   return new GoogleGenAI({ apiKey: API_KEY });
 };
 
-export async function generateEmbedding(text: string) {
+export async function generateEmbedding(text: string, isQuery: boolean = false) {
   const ai = getGeminiAI();
   try {
     const result = await ai.models.embedContent({
-      model: "text-embedding-004",
-      contents: [{ parts: [{ text }] }],
+      model: "gemini-embedding-2-preview",
+      contents: [text],
+      config: {
+        taskType: isQuery ? "RETRIEVAL_QUERY" : "RETRIEVAL_DOCUMENT",
+      }
     });
     
     if (result && result.embeddings && result.embeddings[0] && result.embeddings[0].values) {
       return result.embeddings[0].values;
     }
-    // Handle single embedding response if it's not an array
-    if ((result as any).embedding && (result as any).embedding.values) {
-      return (result as any).embedding.values;
-    }
     throw new Error("Invalid embedding response structure");
   } catch (error: any) {
-    console.error("Embedding failed:", error.message || error);
+    console.error("Embedding failed:", error.message || JSON.stringify(error));
     
     // Fallback: Create a deterministic vector based on the text content
     const vector = new Array(768).fill(0);

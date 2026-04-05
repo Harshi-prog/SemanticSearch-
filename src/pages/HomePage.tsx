@@ -1,9 +1,10 @@
 import React, { useState } from 'react';
-import { Search as SearchIcon, Sparkles, ChevronRight } from 'lucide-react';
+import { Search as SearchIcon, Sparkles, ChevronRight, Star, Send, CheckCircle2 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { Card, SectionTitle, BowIcon } from '../components/UI';
 import { generateEmbedding, getAnswerFromContext } from '../services/gemini';
 import { vectorStore } from '../services/vectorStore';
+import { feedbackStore } from '../services/feedbackStore';
 import Markdown from 'react-markdown';
 
 export const HomePage = () => {
@@ -13,6 +14,7 @@ export const HomePage = () => {
     answer: string;
     sources: any[];
   } | null>(null);
+  const [isFeedbackSubmitted, setIsFeedbackSubmitted] = useState(false);
 
   const handleSearch = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -20,10 +22,11 @@ export const HomePage = () => {
 
     setIsSearching(true);
     setResult(null);
+    setIsFeedbackSubmitted(false);
 
     try {
       // 1. Generate query embedding
-      const queryEmbedding = await generateEmbedding(query);
+      const queryEmbedding = await generateEmbedding(query, true);
 
       // 2. Search local vector store
       const sources = vectorStore.search(queryEmbedding, 10);
@@ -31,6 +34,15 @@ export const HomePage = () => {
       if (sources.length === 0) {
         setResult({
           answer: "No documents have been indexed yet. Please go to the Upload page and add some documents.",
+          sources: []
+        });
+        return;
+      }
+
+      // Check if top score is very low, suggesting model mismatch
+      if (sources[0].score < 0.3) {
+        setResult({
+          answer: "I couldn't find any relevant information in your documents. \n\n**Tip:** If you uploaded documents before our recent update, please go to the **Upload** page, delete them, and re-upload them to re-index with the new model.",
           sources: []
         });
         return;
@@ -57,6 +69,23 @@ export const HomePage = () => {
     } finally {
       setIsSearching(false);
     }
+  };
+
+  const handleFeedbackSubmit = (rating: number) => {
+    if (!result) return;
+    
+    const userStr = localStorage.getItem('current_user');
+    const user = userStr ? JSON.parse(userStr) : null;
+
+    feedbackStore.saveFeedback({
+      query,
+      answer: result.answer,
+      rating,
+      comment: '',
+      userId: user?.email
+    });
+
+    setIsFeedbackSubmitted(true);
   };
 
   return (
@@ -127,8 +156,55 @@ export const HomePage = () => {
           >
             <Card className="bg-white/90 dark:bg-slate-900/90" withBow>
               <SectionTitle icon={Sparkles}>Answer</SectionTitle>
-              <div className="prose prose-pink dark:prose-invert max-w-none text-slate-700 dark:text-slate-300 leading-relaxed">
+              <div className="prose prose-pink dark:prose-invert max-w-none text-slate-700 dark:text-slate-300 leading-relaxed mb-8">
                 <Markdown>{result.answer}</Markdown>
+              </div>
+
+              {/* Feedback Section */}
+              <div className="mt-12 pt-8 border-t border-pink-100 dark:border-slate-800">
+                <AnimatePresence mode="wait">
+                  {isFeedbackSubmitted ? (
+                    <motion.div
+                      key="success"
+                      initial={{ opacity: 0, scale: 0.9 }}
+                      animate={{ opacity: 1, scale: 1 }}
+                      className="flex flex-col items-center justify-center py-4 text-pink-600 dark:text-pink-400"
+                    >
+                      <CheckCircle2 className="w-12 h-12 mb-2" />
+                      <p className="font-bold text-lg">Thank you for your feedback!</p>
+                    </motion.div>
+                  ) : (
+                    <motion.div
+                      key="form"
+                      initial={{ opacity: 0 }}
+                      animate={{ opacity: 1 }}
+                      className="space-y-6"
+                    >
+                      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+                        <div>
+                          <h4 className="text-lg font-bold text-slate-800 dark:text-white">Was this answer helpful?</h4>
+                          <p className="text-sm text-slate-500 dark:text-slate-400">Your feedback helps us improve the search accuracy.</p>
+                        </div>
+                        <div className="flex gap-2">
+                          {[1, 2, 3, 4, 5].map((star) => (
+                            <button
+                              key={star}
+                              onClick={() => handleFeedbackSubmit(star)}
+                              className="p-1 transition-transform hover:scale-125 group"
+                              title={`${star} Stars`}
+                            >
+                              <Star
+                                className={`w-8 h-8 transition-colors ${
+                                  'text-slate-300 dark:text-slate-700 group-hover:text-pink-400'
+                                }`}
+                              />
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
               </div>
             </Card>
           </motion.div>
